@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">TheFuelFilling</string>
+    <string name="action_settings">Settings</string>
+    <string name="fleet_name_placeholder">RegNo</string>
+    <string name="permissions_not_granted_read_phone_state">Permission not granted</string>
+    <string name="fleet_id_place_holder">Fleets ID</string>
+    <string name="fleetBtnTxt">Select your fleet...</string>
+    <string name="clear_localdb">Clear Local DB</string>
+    <string name="radio_regular">RegularFuel</string>
+    <string name="radio_premium">PremiumFuel</string>
+    <string name="title_activity_posted_fleets">PostedFleets</string>
+    <string name="show_posted">Saved Fleets</string>
+</resources>

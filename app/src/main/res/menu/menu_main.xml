@@ -1,0 +1,22 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="in.thefleet.thefuelfilling.MainActivity">
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="100"
+        android:title="@string/action_settings"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/clear_localdb"
+        android:orderInCategory="101"
+        android:title="@string/clear_localdb"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/show_posted"
+        android:orderInCategory="103"
+        android:title="@string/show_posted"
+        app:showAsAction="never" />
+</menu>

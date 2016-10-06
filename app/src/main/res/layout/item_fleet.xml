@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content" >
+
+    <TextView
+        android:id="@+id/textregNo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_alignParentTop="true"
+        android:text="@string/fleet_name_placeholder"
+        android:textSize="@dimen/text_size_medium" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="FleetType"
+        android:textSize="@dimen/text_size_medium"
+        android:id="@+id/textFleetTyp"
+        android:layout_below="@+id/textregNo"
+        android:layout_alignStart="@+id/textregNo"
+        android:layout_marginTop="4dp" />
+
+</RelativeLayout>
