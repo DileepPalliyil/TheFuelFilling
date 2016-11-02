@@ -51,11 +51,24 @@
         android:inputType="number"
         android:layout_alignParentLeft="true"
         android:textSize="@dimen/text_size_medium"/>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/textInv"
+        android:layout_below="@+id/textQty"
+        android:layout_centerHorizontal="true"
+        android:textSize="18sp"
+        android:layout_alignParentLeft="true"
+        android:hint="Invoice Number"
+        android:inputType="number"
+        android:maxLines="1"
+        android:maxLength="10"/>
     <Spinner
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/spinStation"
-        android:layout_below="@+id/textQty"
+        android:layout_below="@+id/radiogfprice"
         android:layout_centerHorizontal="true" />
 
     <ProgressBar
@@ -89,6 +102,19 @@
 
     </RadioGroup>
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Fuel Price"
+        android:id="@+id/textFprice"
+        android:layout_below="@id/textInv"
+        android:layout_marginTop="4dp"
+        android:inputType="textMultiLine"
+        android:minLines="1"
+        android:visibility="visible"
+        android:gravity="top|left"
+        android:textSize="@dimen/text_size_medium" />
+
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -96,23 +122,10 @@
         android:id="@+id/saveButton"
         android:onClick= "saveFilling()"
         android:background="@drawable/button_border"
-        android:layout_below="@+id/radiogfprice"
         android:maxLines="1"
+        android:layout_below="@+id/spinStation"
         android:layout_alignParentStart="true" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Fuel Price"
-        android:id="@+id/textFprice"
-        android:layout_below="@id/spinStation"
-        android:layout_marginTop="4dp"
-        android:inputType="textMultiLine"
-        android:minLines="1"
-        android:visibility="visible"
-        android:gravity="top|left"
-        android:textSize="@dimen/text_size_medium"
-        />
 
 
 </RelativeLayout>

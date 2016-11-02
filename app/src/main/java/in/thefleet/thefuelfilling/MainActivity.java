@@ -62,49 +62,53 @@ import java.util.Calendar;
 import java.util.List;
 
 import in.thefleet.thefuelfilling.model.Fleet;
+import in.thefleet.thefuelfilling.model.Header;
 import in.thefleet.thefuelfilling.model.Station;
 import in.thefleet.thefuelfilling.online.isOnline;
 import in.thefleet.thefuelfilling.parsers.FleetJSONParser;
+import in.thefleet.thefuelfilling.parsers.HeaderJSONParser;
 import in.thefleet.thefuelfilling.parsers.StationJSONParser;
 import in.thefleet.thefuelfilling.phne.TelephonyInfo;
 import in.thefleet.thefuelfilling.service.NetworkBroadcast;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
-   // private static final int SAVED_REQUEST_CODE = 1001;
+    public static final String HeaderPREFERENCES = "HePrefs" ;
+    SharedPreferences headerPrefs;
+    SharedPreferences.Editor editor;
 
     private static final int INTERVAL = 1000 * 60;
     private static final int DELAY = 5000;
     private static final int LOADER1 = 1;
 
-
     private CursorAdapter cursorAdapter;
     List<Fleet> fleetList;
     List<Station> stationList;
+    List<Header> headerList;
     private static final int MY_PERMISSIONS_REQUEST_READ_PHONE_STATE = 0;
     public static final String TAG = "MainActivity";
     public static final String FLEETS_BASE_URL =
             "http://thefleet.in/fleetmasterservice.svc/getFleetDetails/";
     public static final String STATIONS_BASE_URL =
             "http://thefleet.in/Fleetmasterservice.svc/getStation/";
-   // private  int nearest_station_key = 0;
+    public static final String HEADER_BASE_URL =
+            "http://thefleet.in/Fleetmasterservice.svc/getHeader/";
 
-    //Distance of station  less than 1000 meters will be captured in onResume
-   // private  double station_distance = 1000;
 
     public static String imsiSIM;
-  //  String imsiSIM;
     public String fleetUrl = null;
     public String stationUrl = null;
+    public String headerUrl = null;
     ProgressBar pb;
     private EditText ckmText;
     private EditText okmText;
     private EditText qtyText;
     private TextView regNoText;
+    private EditText invText;
     private String saveFilter;
     private String delFilter;
     private String dupFilter;
-    private String disFilter;
+   // private String disFilter;
     private String priceFilter;
     Spinner spn;
     int getFleetResult = 1;
@@ -113,11 +117,12 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     private Toast t_nwnot2;
     private Toast t_volleyf;
     private Toast t_volleys;
+    private Toast t_volleyh;
 
-    private RadioGroup radioFuelGroup;
+
     private RadioButton radioRprice;
     private RadioButton radioPprice;
-
+    private RadioGroup radioFuelGroup;
     private BroadcastReceiver broadcastReceiver;
 
     FleetsDataSource fleetsDataSource;
@@ -146,6 +151,12 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         radioPprice.setTextColor(Color.BLACK);
         Globals g = Globals.getInstance();
         g.setFpSelected(1); //Set to regular price
+
+        headerPrefs = getSharedPreferences(MainActivity.HeaderPREFERENCES,
+                Context.MODE_PRIVATE);
+        if (headerPrefs.contains("hnamekey")) {
+         setTitle(headerPrefs.getString("hnamekey", null));
+        }
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -188,29 +199,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                             alertcnt.showDialog(MainActivity.this, "No network and no data saved locally");
                         }
 
-                        // show the list view as dropdown
-                        /*if (isOnline.isNetworkConnected(MainActivity.this)) {
-                            if (getFleetResult == 1) {
-                                popupWindowFleets.showAsDropDown(v, -5, 0);
-                            } else if (getFleetResult == 0) {
-                                ErrorDialog alert0 = new ErrorDialog();
-                                alert0.showDialog(MainActivity.this, "No fleet details from server.Try refreshing.");
-                            }
-                        }else {
-                            //Check data exists
-                            Cursor cursor = getContentResolver().query(FleetsDataSource.CONTENT_URI,
-                                    FleetsDBOpenHelper.ALL_COLUMNS,null,null,null);
-                            int cnt = cursor.getCount();
-
-                            if (cnt > 0) {
-                                popupWindowFleets = popupWindowFleets();
-                                popupWindowFleets.showAsDropDown(v, -5, 0);
-                            }else {
-                                ErrorDialog alertcnt = new ErrorDialog();
-                                alertcnt.showDialog(MainActivity.this, "No network and no data saved locally");
-                            }
-                        }*/
-
                           break;
                     case R.id.saveButton:
                         saveFilling();
@@ -227,10 +215,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 ckmText = (EditText) findViewById(R.id.textCKM);
                 qtyText = (EditText) findViewById(R.id.textQty);
                 regNoText = (TextView) findViewById(R.id.textregNo);
-
+                invText = (EditText) findViewById(R.id.textInv);
 
                 //Check for null values and alert
-                if ((ckmText.length() !=0) && (qtyText.length() !=0) ) {
+                if ((ckmText.length() !=0) && (qtyText.length() !=0) && (invText.length() !=0) ) {
                     int ckm = Integer.parseInt(ckmText.getText().toString().trim());
                     Integer ckmOkm = Integer.valueOf(ckmText.getText().toString())
                             - Integer.valueOf(okmText.getText().toString());
@@ -242,8 +230,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                     }
 
                     double avg = g.getavgSelected();
-
-                  //  double recavg = ckmOkm / Integer.valueOf(qtyText.getText().toString());
                     double recavg = ckmOkm / g.getlqtySelected();
                     double upperavg = avg + (avg * .7);
                     double loweravg = avg - (avg * .7);
@@ -261,11 +247,12 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                              values.put(FleetsDBOpenHelper.FLEETS_CKM, ckm);
                              values.put(FleetsDBOpenHelper.FLEETS_QTY, Integer.valueOf(qtyText.getText().toString().trim()));
                              values.put(FleetsDBOpenHelper.FLEETS_SID, Integer.valueOf(sid.trim()));
-                             values.put(FleetsDBOpenHelper.FLEETS_CREATED,"current_timestamp");
+                             values.put(FleetsDBOpenHelper.FLEETS_INV, invText.getText().toString().trim());
+                             //values.put(FleetsDBOpenHelper.FLEETS_CREATED,"CURRENT_TIMESTAMP");
 
-                            priceFilter = StationDBOpenHelper.STATION_KEY + "=" + Integer.valueOf(sid.trim());
-
-                            Cursor cursor_fpchk = getContentResolver().query(StationsDataSource.CONTENT_URI2,
+                             priceFilter = StationDBOpenHelper.STATION_KEY + "=" + Integer.valueOf(sid.trim())
+                                     +" and "+StationDBOpenHelper.STATION_FKEY+"="+g.getFidSelected();
+                             Cursor cursor_fpchk = getContentResolver().query(StationsDataSource.CONTENT_URI2,
                                      StationDBOpenHelper.ALL_COLUMNS, priceFilter, null, null);
 
                             if( cursor_fpchk != null && cursor_fpchk.moveToFirst() ) {
@@ -322,7 +309,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 } else {
                     //Null column condition check
                     ErrorDialog alertn = new ErrorDialog();
-                    alertn.showDialog(MainActivity.this, "Enter all required values");
+                    alertn.showDialog(MainActivity.this, "Enter all required values(CKM/QTY/INVOICE)");
                 }
             }
 
@@ -346,6 +333,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         ckmc.setText("");
         EditText qkmc = (EditText) findViewById(R.id.textQty);
         qkmc.setText("");
+        EditText inv = (EditText) findViewById(R.id.textInv);
+        inv.setText("");
         Spinner spin = (Spinner) findViewById(R.id.spinStation);
         spin.setAdapter(null);
         Button fleetBtn = (Button) findViewById(R.id.buttonFleetDropDown);
@@ -491,7 +480,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 android.app.AlertDialog alert = builder.create();
                 alert.show();
 
-
                 return true;
         }
     }
@@ -576,24 +564,30 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                     g.setImei(imsiSIM);
                     fleetUrl = MainActivity.FLEETS_BASE_URL + imsiSIM;
                     stationUrl = MainActivity.STATIONS_BASE_URL + imsiSIM;
+                    headerUrl = MainActivity.HEADER_BASE_URL + imsiSIM;
                     requestData(fleetUrl);
                     requestStations(stationUrl);
+                    requestHeader(headerUrl);
                 } else if (simValue.equals("2")) {
                     imsiSIM = telephonyInfo.getImsiSIM2();
                     Globals g = Globals.getInstance();
                     g.setImei(imsiSIM);
                     fleetUrl = MainActivity.FLEETS_BASE_URL + imsiSIM;
                     stationUrl = MainActivity.STATIONS_BASE_URL + imsiSIM;
+                    headerUrl = MainActivity.HEADER_BASE_URL + imsiSIM;
                     requestData(fleetUrl);
                     requestStations(stationUrl);
+                    requestHeader(headerUrl);
                 } else {
                     imsiSIM = "357327070825555";
                     Globals g = Globals.getInstance();
                     g.setImei(imsiSIM);
                     fleetUrl = MainActivity.FLEETS_BASE_URL + "357327070825555";
                     stationUrl = MainActivity.STATIONS_BASE_URL + "357327070825555";
+                    headerUrl = MainActivity.HEADER_BASE_URL + "357327070825555";
                     requestData(fleetUrl);
                     requestStations(stationUrl);
+                    requestHeader(headerUrl);
                 }
              /*   else if {
                     Toast.makeText(this, "Sim is not ready or no access.Try with different sim", Toast.LENGTH_LONG).show();
@@ -674,6 +668,48 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         RetryPolicy policy = new DefaultRetryPolicy(socketTimeout, 2, 2);
         request2.setRetryPolicy(policy);
         queue2.add(request2);
+    }
+
+    //Volley request header
+    private void requestHeader(String huri) {
+
+        //Do it only once
+      if (!headerPrefs.contains("hnamekey")) {
+          Log.d(TAG,"header url :"+huri);
+
+          StringRequest request3 = new StringRequest(huri,
+
+                  new Response.Listener<String>() {
+
+                      @Override
+                      public void onResponse(String response) {
+                          headerList = HeaderJSONParser.parseFeed(response);
+
+                          for (Header header : headerList) {
+                              editor = headerPrefs.edit();
+                              editor.putString("hnamekey", header.getHeaderName().substring(0,12)+".. User:"+header.getUser_Name());
+                              editor.commit();
+                          }
+
+                          getSupportActionBar().setTitle(headerPrefs.getString("hnamekey", null));
+                      }
+                  },
+
+                  new Response.ErrorListener() {
+                      @Override
+                      public void onErrorResponse(VolleyError error) {
+
+                          t_volleyh = Toast.makeText(MainActivity.this, "Volley Header:" + error.getMessage(), Toast.LENGTH_LONG);
+                          t_volleyh.cancel();
+
+                      }
+                  });
+          RequestQueue queue3 = Volley.newRequestQueue(this);
+          int socketTimeout = 60000;// seconds - change to what you want
+          RetryPolicy policy = new DefaultRetryPolicy(socketTimeout, 2, 2);
+          request3.setRetryPolicy(policy);
+          queue3.add(request3);
+      }
     }
 
 
@@ -885,7 +921,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                     radioRprice.setTextColor(Color.parseColor("#fe9c02"));
                     radioPprice.setTextColor(Color.BLACK);
                     g.setFpSelected(1);
-                    Log.d(TAG,"First");
+                   // Log.d(TAG,"First");
                 }
                 break;
 
@@ -893,7 +929,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 if (checked){
                     radioPprice.setTextColor(Color.parseColor("#fe9c02"));
                     radioRprice.setTextColor(Color.BLACK);
-                    Log.d(TAG,"Second");
+                    //Log.d(TAG,"Second");
                     g.setFpSelected(2);
                 }
                 break;

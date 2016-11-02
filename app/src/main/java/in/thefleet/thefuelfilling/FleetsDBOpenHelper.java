@@ -29,12 +29,13 @@ public class FleetsDBOpenHelper extends SQLiteOpenHelper {
     public static final String FLEETS_SID= "fleetsSid";
     public static final String FLEETS_FPRICE= "fleetsFprice";
     public static final String FLEETS_SIM= "fleetsSIM";
+    public static final String FLEETS_INV= "fleetsINV";
     public static final String FLEETS_CREATED = "fleetsCreated";
 
     public static final String[] ALL_COLUMNS =
             {FLEETS_ID,FLEETS_KEY,FLEETS_REGNO,FLEETS_TYPE,FLEETS_MODEL,
                     FLEETS_OKM,FLEETS_CKM,FLEETS_AVG,FLEETS_QTY,FLEETS_LQTY,FLEETS_FTYPE,FLEETS_ERRFLG,
-                    FLEETS_SID,FLEETS_FPRICE,FLEETS_SIM,FLEETS_CREATED};
+                    FLEETS_SID,FLEETS_FPRICE,FLEETS_SIM,FLEETS_INV,FLEETS_CREATED};
     //SQL to create table
     private static final String TABLE_CREATE =
             "CREATE TABLE " + TABLE_FLEETS + " (" +
@@ -53,8 +54,10 @@ public class FleetsDBOpenHelper extends SQLiteOpenHelper {
                     FLEETS_SID + " INTEGER, "  +
                     FLEETS_FPRICE + " DOUBLE, "  +
                     FLEETS_SIM + " TEXT, " +
+                    FLEETS_INV + " TEXT, " +
                     FLEETS_CREATED + " DATETIME DEFAULT CURRENT_TIMESTAMP" +
                     ")";
+
 
     public FleetsDBOpenHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);

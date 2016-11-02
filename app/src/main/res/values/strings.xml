@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">TheFuelFilling</string>
+    <string name="app_name">FillFueling</string>
     <string name="action_settings">Settings</string>
     <string name="fleet_name_placeholder">RegNo</string>
     <string name="permissions_not_granted_read_phone_state">Permission not granted</string>

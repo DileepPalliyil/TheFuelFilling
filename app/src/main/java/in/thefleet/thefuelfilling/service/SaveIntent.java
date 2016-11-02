@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.List;
 
 import in.thefleet.thefuelfilling.FleetsDBOpenHelper;
 import in.thefleet.thefuelfilling.FleetsDataSource;
@@ -23,18 +22,14 @@ import in.thefleet.thefuelfilling.MainActivity;
 import in.thefleet.thefuelfilling.PostFilling;
 import in.thefleet.thefuelfilling.PostedDBOpenHelper;
 import in.thefleet.thefuelfilling.PostedDataSource;
-import in.thefleet.thefuelfilling.model.Fleet;
 
 public class SaveIntent extends IntentService  {
 
     private String saveFilter;
-    private String dupFilter;
-    private String delFilter;
+    private String postFilter;
     private String updateFilter;
     public static final String TAG = "SaveIntent";
     private Context context;
-    List<Fleet> fleetList;
-    FleetsDataSource fleetsDataSource;
 
     public String fleetUrl = MainActivity.FLEETS_BASE_URL + MainActivity.imsiSIM;
 
@@ -65,7 +60,7 @@ public class SaveIntent extends IntentService  {
 
             Cursor cursor = getContentResolver().query(FleetsDataSource.CONTENT_URI,
                     FleetsDBOpenHelper.ALL_COLUMNS, saveFilter, null, null);
-            //cursor.moveToFirst();
+
             Log.d(TAG,"Currsor recovered "+ cursor.getCount()+" rows ");
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
 
@@ -77,12 +72,12 @@ public class SaveIntent extends IntentService  {
                 String sim = cursor.getString(cursor.getColumnIndex(FleetsDBOpenHelper.FLEETS_SIM));
                 int stationId = Integer.parseInt(cursor.getString(cursor.getColumnIndex(FleetsDBOpenHelper.FLEETS_SID)));
                 double fuelPrice = cursor.getDouble(cursor.getColumnIndex(FleetsDBOpenHelper.FLEETS_FPRICE));
+                String fillDate = cursor.getString(cursor.getColumnIndex(FleetsDBOpenHelper.FLEETS_CREATED));
+                String invoice = cursor.getString(cursor.getColumnIndex(FleetsDBOpenHelper.FLEETS_INV));
                 updateFilter = FleetsDBOpenHelper.FLEETS_ID + "=" + fleetId;
 
                 Log.d(TAG, "Cursor row results fleetid/regno/ckm :"+fleetId+"/"+fleetRegno+"/"+fleetCkm+"/"+stationId+"/"
                                                                                               +fuelPrice);
-                //Globals g = Globals.getInstance();
-
                 String fillingJson = "{'IMEI_No':" + "'" +sim  + "'" + ","
                         + "'Filling_Fleet_Reg_No':" + "'" + fleetRegno + "'" + ","
                         + "'Filling_Opening_KM':" + "'" + fleetOkm + "'" + ","
@@ -90,17 +85,16 @@ public class SaveIntent extends IntentService  {
                         + "'Filling_HSD_Qty':" + "'" + fleetQTY + "'" + ","
                         + "'Filling_Rate_Per_Litre':" + "'" + fuelPrice + "'" + ","
                         + "'Filling_Station_ID':" + "'" + stationId + "'" + ","
-                        + "'Filling_Date':'2016-09-02',"
-                        + "'Filling_Driver_Name':'dileep',"
-                        + "'Filling_Station_Invoice':'18',"
-                        + "'Status':'1',"
-                        + "'Group_Name':'global',"
-                        + "'Created_Date':'2016-09-17'"
+                        + "'Filling_Date':" + "'" + fillDate + "'" + ","
+                        + "'Filling_Station_Invoice':" + "'" + invoice + "'"
                         + "}";
-                Log.d(TAG,"Json string : fillingJson"+fillingJson);
+              //  Log.d(TAG,"Json string : fillingJson"+fillingJson);
+              //  + "'Filling_Driver_Name':'dileep',"
+              //  + "'Status':'1',"
+             //           + "'Group_Name':'global',"
+             //           + "'Created_Date':'2016-09-17'"
+               // + ","
 
-                //+ "'Filling_Rate_Per_Litre':'68',"
-                //+ "'Filling_Rate_Per_Litre':" + "'" + fuelPrice + "'" + ","
                 String url = "http://thefleet.in/fleetmasterservice.svc/addfilling";
                 PostFilling post = new PostFilling(this);
 
@@ -140,9 +134,16 @@ public class SaveIntent extends IntentService  {
                             value.put(FleetsDBOpenHelper.FLEETS_ERRFLG, (byte[]) null);
                             value.put(FleetsDBOpenHelper.FLEETS_CREATED, getTodaysDate().toString());
 
+                            Cursor cursor_delpost = getContentResolver().query(PostedDataSource.CONTENT_URI3,
+                                    PostedDBOpenHelper.ALL_COLUMNS, null, null, null);
+                            if (cursor_delpost.getCount()>= 2) {
+                                //Delete 1 row if the count is 2 or more for storing maximum 3 rows in db
+                                postFilter = "rowid in (select min(rowid) from sfleets)";
+                                getContentResolver().delete(
+                                        PostedDataSource.CONTENT_URI3, postFilter, null);
+                            }
+                            cursor_delpost.close();
                             //Insert the filling int posted db
-                            getContentResolver().delete(
-                                    PostedDataSource.CONTENT_URI3, null, null) ;
                             ContentValues pvalues = new ContentValues();
                             pvalues.put(PostedDBOpenHelper.SFLEETS_KEY, fleetId);
                             pvalues.put(PostedDBOpenHelper.SFLEETS_OKM, fleetOkm);

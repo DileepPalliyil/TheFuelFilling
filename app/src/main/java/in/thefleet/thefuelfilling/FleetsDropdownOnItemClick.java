@@ -109,7 +109,6 @@ public class FleetsDropdownOnItemClick implements android.widget.AdapterView.OnI
 
             String selectedItemText = ((TextView) view.findViewById(R.id.textregNo)).getText().toString()+
                     "-"+ftype;
-                 //   + "-" + ((TextView) view.findViewById(R.id.textFleetTyp)).getText().toString();
             mainActivity.buttonFleetsDropDown.setText(selectedItemText);
 
             Toast.makeText(mContext, "Fleet AVG is: " + avg, Toast.LENGTH_SHORT).show();
@@ -135,7 +134,6 @@ public class FleetsDropdownOnItemClick implements android.widget.AdapterView.OnI
                     mContext, R.layout.station_spinner, R.id.textSpin,
                     al);
             spn.setAdapter(aa1);
-
             cursor_stndd.close();
 
             spn.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -147,36 +145,20 @@ public class FleetsDropdownOnItemClick implements android.widget.AdapterView.OnI
                     g.setSidSelected(Integer.valueOf(sid.trim()));
                     Log.d(TAG,"Selected station id2 :"+g.getSidSelected());
 
-                    if (selectedItem != parent.getItemAtPosition(0).toString()) {
-
-                        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-                        builder.setMessage("Station selected is not nearest!Still want to continue or reset to nearest?")
-                                .setCancelable(false)
-                                .setPositiveButton("Continue", new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int id) {
-                                        dialog.cancel();
-                                    }
-                                })
-                                .setNegativeButton("Reset", new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int id) {
-                                        spn.setSelection(0);
-                                    }
-                                });
-                        AlertDialog alert = builder.create();
-                        alert.show();
-                    }
 
                     //Display fuel prices for selected stations
-                    String priceFilter = StationDBOpenHelper.STATION_KEY + "=" + Integer.valueOf(sid.trim());
+                    String priceFilter = StationDBOpenHelper.STATION_KEY + "=" + Integer.valueOf(sid.trim())
+                            +" and "+StationDBOpenHelper.STATION_FKEY+"="+g.getFidSelected();
+
                     Cursor cursor_fpice = mContext.getContentResolver().query(StationsDataSource.CONTENT_URI2,
                             StationDBOpenHelper.ALL_COLUMNS, priceFilter, null,
                             null);
-                    if (cursor_fpice != null) {
+                    if (cursor_fpice.getCount() >0) {
                         cursor_fpice.moveToFirst();
                         regularFprice = cursor_fpice.getDouble(cursor_fpice.getColumnIndex(StationDBOpenHelper.STATION_RPRICE));
                         premiumFprice = cursor_fpice.getDouble(cursor_fpice.getColumnIndex(StationDBOpenHelper.STATION_PPRICE));
                         cursor_fpice.close();
-
+                        Log.d(TAG,"Selected station fuel prices are regular :"+regularFprice+" Premium :"+premiumFprice);
                         TextView textFprice = (TextView) mainActivity.findViewById(R.id.textFprice);
                         textFprice.setVisibility(view.VISIBLE);
                         textFprice.setText("Regular :"+regularFprice+ "/"+"Premium :"+premiumFprice);
@@ -184,22 +166,35 @@ public class FleetsDropdownOnItemClick implements android.widget.AdapterView.OnI
                         TextView textFprice = (TextView) mainActivity.findViewById(R.id.textFprice);
                         textFprice.setVisibility(view.GONE);
                     }
-                     Log.d(TAG,"Selected station fuel prices are regular :"+regularFprice+" Premium :"+premiumFprice);
 
+                    if (selectedItem != parent.getItemAtPosition(0).toString()) {
 
-                } // to close the onItemSelected
+                         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+                         builder.setMessage("Station selected is not nearest!Still want to continue or reset to nearest?")
+                          .setCancelable(false)
+                          .setPositiveButton("Continue", new DialogInterface.OnClickListener() {
+                         public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                          }
+                      })
+                      .setNegativeButton("Reset", new DialogInterface.OnClickListener() {
+                      public void onClick(DialogInterface dialog, int id) {
+                        spn.setSelection(0);
+                    }
+                 });
+                AlertDialog alert = builder.create();
+                alert.show();
+               }
+
+            } // to close the onItemSelected*/
 
                 public void onNothingSelected(AdapterView<?> parent) {
 
                 }
             });
-
-
         }
-
-
     }
 
-    }
+}
 
 
